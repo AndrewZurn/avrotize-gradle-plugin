@@ -15,7 +15,7 @@ public class AvrotizePlugin implements Plugin<Project> {
 
         // Set defaults
         extension.getInputDirectory().convention(project.getLayout().getProjectDirectory().dir("src/main/resources/schema"));
-        extension.getOutputDirectory().convention(project.getLayout().getBuildDirectory().dir("generated/sources/avrotize/java/main"));
+        extension.getOutputDirectory().convention(project.getLayout().getBuildDirectory().dir("generated/sources/avrotize/main/java"));
         extension.getInputFormat().convention("jsonschema");
         extension.getOutputFormat().convention("java");
         extension.getAvrotizePath().convention("avrotize");

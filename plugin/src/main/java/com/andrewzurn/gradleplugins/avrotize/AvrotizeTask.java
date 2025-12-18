@@ -56,23 +56,21 @@ public abstract class AvrotizeTask extends DefaultTask {
         String outFormat = getOutputFormat().get();
         String pkg = getPackageName().getOrNull();
 
+        getLogger().info("Input directory: " + inputDir.getAbsolutePath());
         if (!inputDir.exists()) {
             getLogger().warn("Input directory does not exist: " + inputDir.getAbsolutePath());
             return;
         }
-        
+
         // Ensure output directory exists
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
 
-        File[] inputFiles = inputDir.listFiles();
-        if (inputFiles == null) return;
-
-        for (File inputFile : inputFiles) {
-            if (inputFile.isFile()) {
-                processFile(avrotizeExe, inputFile, outputDir, inFormat, outFormat, pkg);
-            }
+        // Use fileTree to recursively traverse the input directory
+        for (File inputFile : getProject().fileTree(inputDir)) {
+            getLogger().info("Processing for input file: " + inputFile.getAbsolutePath());
+            processFile(avrotizeExe, inputFile, outputDir, inFormat, outFormat, pkg);
         }
     }
 
@@ -91,10 +89,6 @@ public abstract class AvrotizeTask extends DefaultTask {
     }
 
     private void processFile(String avrotizeExe, File inputFile, File outputDir, String inFormat, String outFormat, String pkg) {
-        // Simple mapping logic
-        // If input is JSON Schema (json) and output is Java (java)
-        // We need j2a -> a2java
-        
         // This is a simplified implementation. A robust one would have a full graph or matrix.
         
         if ("jsonschema".equalsIgnoreCase(inFormat) || "json".equalsIgnoreCase(inFormat)) {
@@ -122,22 +116,21 @@ public abstract class AvrotizeTask extends DefaultTask {
     }
 
     private void convertJsonSchemaToJava(String avrotizeExe, File inputFile, File outputDir, String pkg) {
-        // Step 1: j2a (JSON Schema to Avro)
-        // We'll create a temporary file for the Avro schema
-        File tempAvroFile = new File(getTemporaryDir(), inputFile.getName() + ".avsc");
-        
-        List<String> j2aArgs = new ArrayList<>();
-        j2aArgs.add(avrotizeExe);
-        j2aArgs.add("j2a");
-        j2aArgs.add(inputFile.getAbsolutePath());
-        j2aArgs.add("--out");
-        j2aArgs.add(tempAvroFile.getAbsolutePath());
-        
-        getLogger().lifecycle("Converting JSON Schema to Avro: " + inputFile.getName());
-        execCommand(j2aArgs);
+        List<String> args = new ArrayList<>();
+        args.add(avrotizeExe);
+        args.add("s2java");
+        args.add(inputFile.getAbsolutePath());
+        args.add("--out");
+        args.add(outputDir.getAbsolutePath());
+        args.add("--jackson-annotation");
 
-        // Step 2: a2java (Avro to Java)
-        convertAvroToJava(avrotizeExe, tempAvroFile, outputDir, pkg);
+        if (pkg != null && !pkg.isEmpty()) {
+            args.add("--package");
+            args.add(pkg);
+        }
+        
+        getLogger().lifecycle("Generating Java code from JSON Schema: " + inputFile.getName());
+        execCommand(args);
     }
 
     private void convertJsonSchemaToAvro(String avrotizeExe, File inputFile, File outputDir) {
@@ -154,23 +147,17 @@ public abstract class AvrotizeTask extends DefaultTask {
     }
 
     private void convertJsonSchemaToProto(String avrotizeExe, File inputFile, File outputDir) {
-        // Step 1: j2a (JSON Schema to Avro)
-        File tempAvroFile = new File(getTemporaryDir(), inputFile.getName() + ".avsc");
-        
         List<String> args = new ArrayList<>();
         args.add(avrotizeExe);
         args.add("s2p");
         args.add(inputFile.getAbsolutePath());
         args.add("--out");
-        args.add(tempAvroFile.getAbsolutePath());
+        args.add(outputDir.getAbsolutePath());
         args.add("--naming-mode");
         args.add("snake");
         
-        getLogger().lifecycle("Converting JSON Schema to Avro: " + inputFile.getName());
+        getLogger().lifecycle("Converting JSON Schema to Proto: " + inputFile.getName());
         execCommand(args);
-
-        // Step 2: a2p (Avro to Proto)
-        convertAvroToProto(avrotizeExe, tempAvroFile, outputDir);
     }
 
     private void convertAvroToProto(String avrotizeExe, File inputFile, File outputDir) {
@@ -183,7 +170,7 @@ public abstract class AvrotizeTask extends DefaultTask {
         args.add("--naming-mode");
         args.add("snake");
         
-        getLogger().lifecycle("Generating Proto definitions from Avro: " + inputFile.getName());
+        getLogger().lifecycle("Converting Avro to Proto: " + inputFile.getName());
         execCommand(args);
     }
 
@@ -195,7 +182,6 @@ public abstract class AvrotizeTask extends DefaultTask {
         args.add("--out");
         args.add(outputDir.getAbsolutePath());
         args.add("--jackson-annotation");
-        args.add(outputDir.getAbsolutePath());
         
         if (pkg != null && !pkg.isEmpty()) {
             args.add("--package");

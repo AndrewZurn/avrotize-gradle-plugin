@@ -50,3 +50,8 @@
 *   **Testing:** "Ensure that it's also well tested." Functional tests must verify the plugin's behavior in a real Gradle environment (using TestKit).
 *   **Documentation:** Maintain clear documentation and always give credit to the original Avrotize authors (Clemens Vasters).
 *   **Context Maintenance:** Keep this `CONTEXT.md` file updated with new architectural decisions and "gotchas" at the end of every session.
+
+## 7. Recent Updates (Dec 18, 2025 - Session 2)
+*   **Recursive Input Traversal:** Updated `AvrotizeTask` to use `project.fileTree(inputDir)` instead of `listFiles()`. This allows the plugin to find schema files in subdirectories.
+    *   *Note:* The current implementation still flattens the output (or relies on Avrotize's output behavior), so duplicate filenames in different subdirectories might collide.
+*   **Publishing Fix:** Added `maven-publish` plugin to `plugin/build.gradle.kts` to fix `publishToMavenLocal`.
