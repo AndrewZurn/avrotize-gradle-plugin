@@ -9,6 +9,7 @@
 plugins {
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
     `java-gradle-plugin`
+    id("com.gradle.plugin-publish") version "2.0.0"
 }
 
 group = "com.andrewzurn.gradleplugins"
@@ -45,12 +46,16 @@ testing {
 }
 
 gradlePlugin {
-    // Define the plugin
-    val avrotizePlugin by plugins.creating {
-        id = "com.andrewzurn.gradleplugins.avrotize"
-        implementationClass = "com.andrewzurn.gradleplugins.avrotize.AvrotizePlugin"
-        displayName = "Avrotize Gradle Plugin"
-        description = "A Gradle plugin to wrap the Avrotize CLI tool for schema conversion and code generation."
+    website.set("https://github.com/AndrewZurn/avrotize-gradle-plugin")
+    vcsUrl.set("https://github.com/AndrewZurn/avrotize-gradle-plugin")
+    plugins {
+        create("avrotizePlugin") {
+            id = "com.andrewzurn.gradleplugins.avrotize"
+            implementationClass = "com.andrewzurn.gradleplugins.avrotize.AvrotizePlugin"
+            displayName = "Avrotize Gradle Plugin"
+            description = "A Gradle plugin to wrap the Avrotize CLI tool for schema conversion and code generation."
+            tags.set(listOf("avrotize", "avro", "jsonschema", "protobuf", "code-generation", "schema-conversion"))
+        }
     }
 }
 
