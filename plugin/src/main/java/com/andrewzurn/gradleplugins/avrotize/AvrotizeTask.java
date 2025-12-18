@@ -102,12 +102,16 @@ public abstract class AvrotizeTask extends DefaultTask {
                 convertJsonSchemaToJava(avrotizeExe, inputFile, outputDir, pkg);
             } else if ("avro".equalsIgnoreCase(outFormat)) {
                 convertJsonSchemaToAvro(avrotizeExe, inputFile, outputDir);
+            } else if ("proto".equalsIgnoreCase(outFormat) || "protobuf".equalsIgnoreCase(outFormat)) {
+                convertJsonSchemaToProto(avrotizeExe, inputFile, outputDir);
             } else {
                  throw new GradleException("Unsupported conversion: " + inFormat + " to " + outFormat);
             }
         } else if ("avro".equalsIgnoreCase(inFormat)) {
              if ("java".equalsIgnoreCase(outFormat)) {
                 convertAvroToJava(avrotizeExe, inputFile, outputDir, pkg);
+            } else if ("proto".equalsIgnoreCase(outFormat) || "protobuf".equalsIgnoreCase(outFormat)) {
+                convertAvroToProto(avrotizeExe, inputFile, outputDir);
             } else {
                  throw new GradleException("Unsupported conversion: " + inFormat + " to " + outFormat);
             }
@@ -149,12 +153,48 @@ public abstract class AvrotizeTask extends DefaultTask {
         execCommand(args);
     }
 
+    private void convertJsonSchemaToProto(String avrotizeExe, File inputFile, File outputDir) {
+        // Step 1: j2a (JSON Schema to Avro)
+        File tempAvroFile = new File(getTemporaryDir(), inputFile.getName() + ".avsc");
+        
+        List<String> args = new ArrayList<>();
+        args.add(avrotizeExe);
+        args.add("s2p");
+        args.add(inputFile.getAbsolutePath());
+        args.add("--out");
+        args.add(tempAvroFile.getAbsolutePath());
+        args.add("--naming-mode");
+        args.add("snake");
+        
+        getLogger().lifecycle("Converting JSON Schema to Avro: " + inputFile.getName());
+        execCommand(args);
+
+        // Step 2: a2p (Avro to Proto)
+        convertAvroToProto(avrotizeExe, tempAvroFile, outputDir);
+    }
+
+    private void convertAvroToProto(String avrotizeExe, File inputFile, File outputDir) {
+        List<String> args = new ArrayList<>();
+        args.add(avrotizeExe);
+        args.add("a2p");
+        args.add(inputFile.getAbsolutePath());
+        args.add("--out");
+        args.add(outputDir.getAbsolutePath());
+        args.add("--naming-mode");
+        args.add("snake");
+        
+        getLogger().lifecycle("Generating Proto definitions from Avro: " + inputFile.getName());
+        execCommand(args);
+    }
+
     private void convertAvroToJava(String avrotizeExe, File inputFile, File outputDir, String pkg) {
         List<String> args = new ArrayList<>();
         args.add(avrotizeExe);
         args.add("a2java");
         args.add(inputFile.getAbsolutePath());
         args.add("--out");
+        args.add(outputDir.getAbsolutePath());
+        args.add("--jackson-annotation");
         args.add(outputDir.getAbsolutePath());
         
         if (pkg != null && !pkg.isEmpty()) {
