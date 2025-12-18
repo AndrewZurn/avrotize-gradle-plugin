@@ -12,7 +12,6 @@ plugins {
 }
 
 group = "com.andrewzurn.gradleplugins"
-artifact = "avrotize-gradle-plugin"
 version = "0.0.1"
 
 repositories {
