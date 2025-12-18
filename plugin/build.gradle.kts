@@ -11,6 +11,10 @@ plugins {
     `java-gradle-plugin`
 }
 
+group = "com.andrewzurn.gradleplugins"
+artifact = "avrotize-gradle-plugin"
+version = "0.0.1"
+
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -43,9 +47,11 @@ testing {
 
 gradlePlugin {
     // Define the plugin
-    val greeting by plugins.creating {
-        id = "org.example.greeting"
-        implementationClass = "org.example.AvrotizeGradlePluginPlugin"
+    val avrotizePlugin by plugins.creating {
+        id = "com.andrewzurn.gradleplugins.avrotize"
+        implementationClass = "com.andrewzurn.gradleplugins.avrotize.AvrotizePlugin"
+        displayName = "Avrotize Gradle Plugin"
+        description = "A Gradle plugin to wrap the Avrotize CLI tool for schema conversion and code generation."
     }
 }
 
